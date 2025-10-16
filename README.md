@@ -86,44 +86,9 @@ OK
 
 ### Algorithm Complexity
 
-- **Time Complexity**: O(E log E) - dominated by sorting edges
-- **Space Complexity**: O(V) for Union-Find + O(E) for edge storage
+- **Time Complexity**: O(m log n) - dominated by sorting edges
 - **Union-Find Operations**: Near O(1) amortized with path compression
 
-## Theoretical Analysis
-
-### Time Complexity Breakdown
-
-Kruskal's algorithm consists of three main operations:
-
-1. **Sorting Edges**: O(E log E)
-   - All edges must be sorted by weight in non-decreasing order
-   - This is the dominant operation for most graphs
-
-2. **Union-Find Operations**: O(E α(V))
-   - Each edge requires one find operation and potentially one union operation
-   - α(V) is the inverse Ackermann function (effectively constant for all practical inputs)
-   - With path compression and union by rank: O(E α(V)) ≈ O(E)
-
-3. **Edge Processing**: O(E)
-   - Iterate through sorted edges once
-   - Early termination when MST is complete (n-1 edges)
-
-**Overall Complexity**: O(E log E) for comparison-based sorting
-
-### Space Complexity
-
-- **Union-Find Data Structure**: O(V) for parent and rank arrays
-- **Edge Storage**: O(E) for the input edge list
-- **MST Storage**: O(V) for the resulting spanning tree
-
-**Total Space**: O(V + E)
-
-### Theoretical Units Calculation
-
-For complete graphs with n vertices:
-- Number of edges: E = n(n-1)/2
-- Theoretical units: E × log₂(E) = (n(n-1)/2) × log₂(n(n-1)/2)
 
 ## Experimental Analysis
 
@@ -147,10 +112,9 @@ This minimizes the sum of squared errors between experimental and scaled theoret
 
 ### Expected Performance Characteristics
 
-1. **Logarithmic Growth**: Experimental times should follow O(E log E) pattern
+1. **Logarithmic Growth**: Experimental times should follow O(m log(n)) pattern
 2. **Scaling Alignment**: Scaled theoretical values should closely match experimental times
 3. **Ratio Consistency**: Ratios between experimental and theoretical times should be close to 1.0
-4. **Memory Usage**: Linear growth in memory usage with graph size
 
 ### Sample Output Format
 
@@ -168,19 +132,12 @@ Scaling constant: 0.123456
 
 ### Key Findings
 
-1. **Algorithm Efficiency**: Kruskal's algorithm demonstrates O(E log E) time complexity as predicted
+1. **Algorithm Efficiency**: Kruskal's algorithm demonstrates O(m log(n)) time complexity as predicted
 2. **Scaling Accuracy**: Least squares scaling provides excellent alignment between theory and experiment
 3. **Union-Find Performance**: Near-constant time operations validate the theoretical analysis
-4. **Sorting Dominance**: Edge sorting is the primary bottleneck, confirming O(E log E) complexity
+4. **Sorting Dominance**: Edge sorting is the primary bottleneck, confirming O(m log(n)) complexity
 5. **Memory Efficiency**: Linear space usage matches theoretical predictions
 
-### Complexity Validation
-
-The experimental results validate the theoretical analysis:
-- **Time Growth**: Follows E log E pattern for complete graphs
-- **Scaling Ratios**: Close to 1.0 indicating accurate theoretical predictions
-- **Memory Usage**: Linear growth with input size
-- **Early Termination**: Algorithm stops when MST is complete (n-1 edges)
 
 ## Course Information
 
