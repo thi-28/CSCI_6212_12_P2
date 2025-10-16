@@ -82,45 +82,49 @@ def theoretical_units_graph(n: int) -> float: # Theoretical units: m log n for a
     return float(m) * math.log2(n)
 
 
-def experimental_time_graph (n: int) -> int: # Runtime in ns
+def experimental_time_graph(n: int) -> Tuple[int, int]: # Runtime in ns, returns (time, edge_count)
     edges = generate_graph(n)
     gc.collect()
     start = time.perf_counter_ns()
     _ = kruskal_mst(n, edges)
     elapsed = time.perf_counter_ns() - start
-    return elapsed
+    return elapsed, len(edges)
 
 
 def analyze_linear_graphs(n_values: List[int]) -> None:
-    """Run experimental vs theoretical analysis over n_values and print a table."""
-    print("n,E,exp_time_ns,theory_units,scale,adjusted_theory_ns,ratio_exp_over_adjusted")
+    """Run experimental vs theoretical analysis over n_values and print detailed table."""
+    print("\nDetailed Analysis Results:")
+    print("=" * 80)
+    print(f"{'n':<6} {'Edges':<8} {'Exp_Time(ns)':<15} {'Theory_Units':<12} {'Scale':<12} {'Adj_Theory(ns)':<15} {'Ratio':<8}")
+    print("=" * 80)
+    
     exp_times: List[int] = []
     theory_units: List[float] = []
     edges_counts: List[int] = []
-    ns: List[int] = []
+    
     for n in n_values:
-        exp_ns = experimental_time_graph(n)
+        exp_ns, m = experimental_time_graph(n)
         th_units = theoretical_units_graph(n)
-        e = max(0, n - 1)
         exp_times.append(exp_ns)
         theory_units.append(th_units)
-        edges_counts.append(e)
-        ns.append(n)
-
-    # Compute a single scaling constant to align theory to experimental
-    sum_theory = sum(theory_units) if theory_units else 1.0
-    sum_exp = float(sum(exp_times)) if exp_times else 0.0
-    scale = (sum_exp / sum_theory) if sum_theory > 0 else 0.0
-
-    adjusted_list: List[int] = []
-    for n, e, exp_ns, th_units in zip(n_values, edges_counts, exp_times, theory_units):
-        adjusted = scale * th_units
-        adjusted_list.append(int(adjusted))
-        ratio = (exp_ns / adjusted) if adjusted > 0 else float('inf')
-        print(f"{n},{e},{exp_ns},{th_units:.4f},{scale:.6f},{int(adjusted)},{ratio:.4f}")
-
-    # Plot Experimental vs Adjusted Theoretical times
-    plot_results(ns, exp_times, adjusted_list)
+        edges_counts.append(m)  # Use actual edge count from graph generation
+    
+    # Calculate scaling constant C using least squares method
+    numerator = sum(e * t for e, t in zip(exp_times, theory_units))
+    denominator = sum(t * t for t in theory_units)
+    scale = (numerator / denominator) if denominator > 0 else 0.0
+    
+    for n, m, exp_ns, th_units in zip(n_values, edges_counts, exp_times, theory_units):
+        adj_theory = int(scale * th_units)
+        ratio = (exp_ns / adj_theory) if adj_theory > 0 else float('inf')
+        print(f"{n:<6} {m:<8} {exp_ns:<15} {th_units:<12.4f} {scale:<12.6f} {adj_theory:<15} {ratio:<8.4f}")
+    
+    print("=" * 80)
+    print(f"Scaling constant: {scale:.6f}")
+    
+    # Plot the results with least squares scaled theoretical values
+    theo_scaled = [scale * th for th in theory_units]
+    plot_results(n_values, exp_times, [int(t) for t in theo_scaled])
 
 
 def plot_results(ns: List[int], exp_times_ns: List[int], adjusted_theory_ns: List[int]) -> None:
@@ -277,40 +281,10 @@ if __name__ == "__main__":
         print("Running unit tests...")
         unittest.main(argv=[''], exit=False)
     else:
-        # Run experimental analysis with detailed output
+        # Run experimental analysis using the updated function
         print("Running experimental analysis...")
         n_values = [100, 200, 300, 400, 500, 700, 1000, 2000, 2500, 3000, 3500, 4000, 
-                   5000, 6700, 7500, 8900, 10000]
-        
-        print("\nDetailed Analysis Results:")
-        print("=" * 80)
-        print(f"{'n':<6} {'Edges':<8} {'Exp_Time(ns)':<15} {'Theory_Units':<12} {'Scale':<12} {'Adj_Theory(ns)':<15} {'Ratio':<8}")
-        print("=" * 80)
-        
-        exp_times: List[int] = []
-        theory_units: List[float] = []
-        edges_counts: List[int] = []
-        
-        for n in n_values:
-            exp_ns = experimental_time_graph(n)
-            th_units = theoretical_units_graph(n)
-            e = n * (n - 1) // 2  # Complete graph edges
-            exp_times.append(exp_ns)
-            theory_units.append(th_units)
-            edges_counts.append(e)
-        
-        # Compute scaling constant from first data point
-        scale = (exp_times[0] / theory_units[0]) if theory_units[0] > 0 else 0.0
-        
-        for n, e, exp_ns, th_units in zip(n_values, edges_counts, exp_times, theory_units):
-            adj_theory = int(scale * th_units)
-            ratio = (exp_ns / adj_theory) if adj_theory > 0 else float('inf')
-            print(f"{n:<6} {e:<8} {exp_ns:<15} {th_units:<12.4f} {scale:<12.6f} {adj_theory:<15} {ratio:<8.4f}")
-        
-        print("=" * 80)
-        print(f"Scaling constant: {scale:.6f}")
-        
-        # Plot the results
-        plot_results(n_values, exp_times, [int(scale * th) for th in theory_units])
+                   5000]
+        analyze_linear_graphs(n_values)
 
 
